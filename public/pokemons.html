@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ajouter un Pokémon</title>
+    <style>
+      /* === RESET + VARIABLES === */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --color-bg: #f7f9fc;
+        --color-primary: #007bff;
+        --color-secondary: #6c757d;
+        --color-success: #28a745;
+        --color-error: #dc3545;
+        --color-text: #212529;
+        --font-main: "Poppins", sans-serif;
+      }
+
+      body {
+        font-family: var(--font-main);
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        padding: 1rem;
+        line-height: 1.6;
+      }
+
+      h1,
+      h2 {
+        margin-bottom: 1rem;
+        color: var(--color-primary);
+      }
+
+      button {
+        background-color: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      form {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.2rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+      }
+
+      #liste {
+        list-style: none;
+        padding: 0;
+        margin-top: 1rem;
+      }
+
+      #liste li {
+        background: white;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.2s ease;
+      }
+
+      #liste li:hover {
+        transform: scale(1.01);
+      }
+
+      .success {
+        color: var(--color-success);
+      }
+
+      .error {
+        color: var(--color-error);
+      }
+
+      #resultat,
+      #editResultat {
+        min-height: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      /* === RESPONSIVE === */
+      @media (min-width: 600px) {
+        form {
+          max-width: 500px;
+          margin: auto;
+        }
+      }
+
+      @media (min-width: 1024px) {
+        body {
+          padding: 2rem 4rem;
+        }
+
+        #liste li {
+          max-width: 700px;
+          margin: 0.75rem auto;
+        }
+      }
+
+      /* === ANIMATIONS === */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      form,
+      #liste li,
+      #resultat,
+      #editResultat {
+        animation: fadeIn 0.4s ease forwards;
+      }
+
+      /* === SPECIAL BUTTONS === */
+      button + button {
+        margin-left: 0.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <button onclick="logout()">Se déconnecter</button>
+    <h1>Ajouter un nouveau Pokémon</h1>
+
+    <form id="pokemonForm">
+      <label>Nom : <input type="text" id="nom" required /> </label><br /><br />
+      <label
+        >Type :
+        <select id="type" required>
+          <option value="">Sélectionnez un type</option>
+          <option value="Normal">Normal</option>
+          <option value="Feu">Feu</option>
+          <option value="Eau">Eau</option>
+          <option value="Plante">Plante</option>
+          <option value="Électrik">Électrik</option>
+          <option value="Glace">Glace</option>
+          <option value="Combat">Combat</option>
+          <option value="Poison">Poison</option>
+          <option value="Sol">Sol</option>
+          <option value="Vol">Vol</option>
+          <option value="Psy">Psy</option>
+          <option value="Insecte">Insecte</option>
+          <option value="Roche">Roche</option>
+          <option value="Spectre">Spectre</option>
+          <option value="Dragon">Dragon</option>
+          <option value="Ténèbres">Ténèbres</option>
+          <option value="Acier">Acier</option>
+          <option value="Fée">Fée</option>
+        </select> </label
+      ><br /><br />
+      <button type="submit">Ajouter</button>
+    </form>
+
+    <p id="resultat"></p>
+    <h2>Liste des Pokémon ajoutés</h2>
+    <ul id="liste"></ul>
+    <h2>Modifier un Pokémon</h2>
+    <form id="editForm" style="display: none">
+      <input type="hidden" id="editId" />
+      <label>Nom : <input type="text" id="editNom" /> </label><br /><br />
+      <label
+        >Type :
+        <select id="editType" required>
+          <option value="">Sélectionnez un type</option>
+          <option value="Normal">Normal</option>
+          <option value="Feu">Feu</option>
+          <option value="Eau">Eau</option>
+          <option value="Plante">Plante</option>
+          <option value="Électrik">Électrik</option>
+          <option value="Glace">Glace</option>
+          <option value="Combat">Combat</option>
+          <option value="Poison">Poison</option>
+          <option value="Sol">Sol</option>
+          <option value="Vol">Vol</option>
+          <option value="Psy">Psy</option>
+          <option value="Insecte">Insecte</option>
+          <option value="Roche">Roche</option>
+          <option value="Spectre">Spectre</option>
+          <option value="Dragon">Dragon</option>
+          <option value="Ténèbres">Ténèbres</option>
+          <option value="Acier">Acier</option>
+          <option value="Fée">Fée</option>
+        </select> </label
+      ><br /><br />
+      <button type="submit">Mettre à jour</button>
+    </form>
+    <p id="editResultat"></p>
+    <script>
+      // Vérifie si l'utilisateur est connecté et est admin
+      const token = localStorage.getItem("token");
+      if (!token) {
+        window.location.href = "login.html";
+      } else {
+        const tokenData = JSON.parse(atob(token.split(".")[1]));
+        if (tokenData.role !== "admin") {
+          window.location.href = "index.html";
+        }
+      }
+
+      const resEl = document.getElementById("resultat");
+      const editEl = document.getElementById("editResultat");
+
+      function gererExpirationSession(res) {
+        if (res.status === 401 || res.status === 403) {
+          localStorage.removeItem("token");
+          localStorage.setItem(
+            "expired_message",
+            "Votre session a expiré. Veuillez vous reconnecter."
+          );
+          window.location.href = "login.html";
+          return true;
+        }
+        return false;
+      }
+
+      function showMessage(el, message, type = "success", duration = 6000) {
+        el.textContent = message;
+        el.className = type;
+        setTimeout(() => {
+          el.textContent = "";
+          el.className = "";
+        }, duration);
+      }
+
+      function saveMessage(key, message) {
+        localStorage.setItem(key, message);
+      }
+
+      function showSavedMessages() {
+        const successMsg = localStorage.getItem("success_message");
+        if (successMsg) {
+          showMessage(resEl, "✅ " + successMsg);
+          localStorage.removeItem("success_message");
+        }
+
+        const deleteMsg = localStorage.getItem("delete_success");
+        if (deleteMsg) {
+          showMessage(resEl, "🗑️ " + deleteMsg);
+          localStorage.removeItem("delete_success");
+        }
+
+        const editMsg = localStorage.getItem("edit_success");
+        if (editMsg) {
+          showMessage(editEl, "✅ " + editMsg);
+          localStorage.removeItem("edit_success");
+        }
+      }
+
+      document
+        .getElementById("pokemonForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const nom = document.getElementById("nom").value;
+          const type = document.getElementById("type").value;
+          if (!nom || !type)
+            return showMessage(
+              resEl,
+              "❌ Le nom et le type sont obligatoires !",
+              "error"
+            );
+
+          try {
+            const res = await fetch("http://localhost:3001/pokemons", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ name: nom, type }),
+            });
+            if (gererExpirationSession(res)) return;
+            const data = await res.json();
+            if (!res.ok)
+              throw new Error(
+                data.errors?.map((e) => `${e.path} : ${e.msg}`).join("\n") ||
+                  "Erreur inconnue"
+              );
+
+            saveMessage(
+              "success_message",
+              `Pokémon \"${data.name}\" ajouté avec succès (ID ${data.id}) !`
+            );
+            location.reload();
+          } catch (err) {
+            showMessage(resEl, "❌ " + err.message, "error");
+          }
+        });
+
+      function chargerListePokemons() {
+        fetch("http://localhost:3001/pokemons", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+          .then((res) => {
+            if (gererExpirationSession(res)) return;
+            return res.json();
+          })
+          .then((pokemons) => {
+            const liste = document.getElementById("liste");
+            liste.innerHTML = "";
+            pokemons.forEach(({ id, name, type }) => {
+              const li = document.createElement("li");
+              li.innerHTML = `${name} (${type})`;
+              li.appendChild(createButton("🗑️", () => supprimerPokemon(id)));
+              li.appendChild(
+                createButton("✏️", () =>
+                  afficherFormulaireEdition(id, name, type)
+                )
+              );
+              liste.appendChild(li);
+            });
+          });
+      }
+
+      function createButton(text, handler) {
+        const btn = document.createElement("button");
+        btn.textContent = text;
+        btn.addEventListener("click", handler);
+        return btn;
+      }
+
+      function supprimerPokemon(id) {
+        fetch(`http://localhost:3001/pokemons/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error("Échec de la suppression");
+            saveMessage("delete_success", `Pokémon supprimé (ID ${id})`);
+            location.reload();
+          })
+          .catch((err) => showMessage(resEl, "❌ " + err.message, "error"));
+      }
+
+      function afficherFormulaireEdition(id, nom, type) {
+        document.getElementById("editForm").style.display = "block";
+        document.getElementById("editId").value = id;
+        document.getElementById("editNom").value = decodeURIComponent(nom);
+        document.getElementById("editType").value = decodeURIComponent(type);
+      }
+
+      document
+        .getElementById("editForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const id = document.getElementById("editId").value;
+          const nom = document.getElementById("editNom").value;
+          const type = document.getElementById("editType").value;
+
+          fetch(`http://localhost:3001/pokemons/${id}`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            body: JSON.stringify({ name: nom, type }),
+          })
+            .then((res) => {
+              if (!res.ok) throw new Error("Erreur lors de la modification");
+              saveMessage("edit_success", "Pokémon mis à jour !");
+              location.reload();
+            })
+            .catch((err) => showMessage(editEl, "❌ " + err.message, "error"));
+        });
+
+      function logout() {
+        localStorage.removeItem("token");
+        window.location.href = "login.html";
+      }
+
+      // Init
+      chargerListePokemons();
+      showSavedMessages();
+    </script>
+  </body>
+</html>

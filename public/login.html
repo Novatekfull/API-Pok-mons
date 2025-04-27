@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Connexion</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        background: linear-gradient(135deg, #f2f5f9, #dbe2ef);
+      }
+
+      .container {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        animation: fadeIn 0.5s ease-in-out;
+      }
+
+      h1 {
+        margin-bottom: 1.5rem;
+        font-size: 1.8rem;
+        text-align: center;
+        color: #333;
+      }
+
+      input[type="text"],
+      input[type="password"] {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ccc;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+      }
+
+      button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #3366ff;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #254eda;
+      }
+
+      #erreur {
+        color: red;
+        margin-top: 0.5rem;
+        font-weight: bold;
+        text-align: center;
+        min-height: 1.5rem;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <p id="expiredMessage" style="color: red; font-weight: bold"></p>
+    <div class="container">
+      <h1>Connexion à l'espace Pokémon</h1>
+      <form id="loginForm">
+        <input
+          type="text"
+          id="username"
+          placeholder="Nom d'utilisateur"
+          required
+        />
+        <input
+          type="password"
+          id="password"
+          placeholder="Mot de passe"
+          required
+        />
+        <button type="submit">Se connecter</button>
+      </form>
+      <p id="erreur"></p>
+    </div>
+
+    <script>
+      const expired = localStorage.getItem("expired_message");
+      if (expired) {
+        document.getElementById("expiredMessage").textContent = expired;
+        localStorage.removeItem("expired_message");
+      }
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const username = document.getElementById("username").value;
+          const password = document.getElementById("password").value;
+
+          console.log("Tentative de connexion avec:", { username, password });
+
+          fetch("http://localhost:3001/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+          })
+            .then((res) => {
+              console.log("Réponse du serveur:", res.status, res.statusText);
+              if (!res.ok) {
+                return res.json().then((err) => {
+                  console.log("Erreur détaillée:", err);
+                  throw new Error(err.error || "Identifiants incorrects");
+                });
+              }
+              return res.json();
+            })
+            .then((data) => {
+              console.log("Données reçues:", data);
+              localStorage.setItem("token", data.token);
+              // Décode le token pour obtenir le rôle
+              const tokenData = JSON.parse(atob(data.token.split(".")[1]));
+              console.log("Token décodé:", tokenData);
+              // Redirige selon le rôle
+              if (tokenData.role === "admin") {
+                window.location.href = "pokemons.html";
+              } else {
+                window.location.href = "index.html";
+              }
+            })
+            .catch((err) => {
+              console.error("Erreur complète:", err);
+              document.getElementById("erreur").textContent =
+                "❌ " + err.message;
+            });
+        });
+    </script>
+  </body>
+</html>
