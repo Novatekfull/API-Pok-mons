@@ -1,5 +1,5 @@
 // Configuration de l'API
-const API_URL = ""; // URL relative car le serveur sert les fichiers statiques
+const API_URL = "https://ton-api.onrender.com"; // URL relative car le serveur sert les fichiers statiques
 
 // Fonctions d'authentification
 async function login(username, password) {

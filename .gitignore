@@ -12,7 +12,7 @@ yarn-error.log
 
 # Données
 data/
-*.json
+
 
 # Système
 .DS_Store
@@ -23,7 +23,7 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
- 
+
 # Logs
 logs/
 *.log
