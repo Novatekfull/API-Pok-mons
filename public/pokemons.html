@@ -352,7 +352,7 @@
             );
 
           try {
-            const res = await fetch("https://ton-api.onrender.com/pokemons", {
+            const res = await fetch("https://api-pok-mons.onrender.com/pokemons", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -409,7 +409,7 @@
         const search = document.getElementById("searchInput")?.value || "";
         const sort = document.getElementById("sortSelect")?.value || "";
 
-        let url = `https://ton-api.onrender.com/pokemons?page=${currentPage}&limit=${limitPerPage}`;
+        let url = `https://api-pok-mons.onrender.com/pokemons?page=${currentPage}&limit=${limitPerPage}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (sort) url += `&sort=${sort}`;
 
@@ -498,7 +498,7 @@
       }
 
       function supprimerPokemon(id) {
-        fetch(`https://ton-api.onrender.com/pokemons/${id}`, {
+        fetch(`https://api-pok-mons.onrender.com/pokemons/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -532,7 +532,7 @@
           const type = document.getElementById("editType").value;
           const image = document.getElementById("editImage").value;
 
-          fetch(`https://ton-api.onrender.com/pokemons/${id}`, {
+          fetch(`https://https://api-pok-mons.onrender.com/pokemons/${id}`, {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
