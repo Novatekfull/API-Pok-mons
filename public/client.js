@@ -1,5 +1,5 @@
-// Configuration de l'API
-const API_URL = "https://api-pok-mons.onrender.com/"; // URL relative car le serveur sert les fichiers statiques
+// Configuration de l'API (⚠️ Sans slash à la fin)
+const API_URL = "https://api-pok-mons.onrender.com";
 
 // Fonctions d'authentification
 async function login(username, password) {
@@ -35,7 +35,7 @@ async function getPokemons() {
   const token = localStorage.getItem("token");
 
   try {
-    const res = await fetch("https://api-pok-mons.onrender.com/pokemons", {
+    const res = await fetch(`${API_URL}/pokemons?page=1&limit=100`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -44,7 +44,7 @@ async function getPokemons() {
     const result = await res.json();
 
     if (Array.isArray(result.data)) {
-      return result.data; // ✅ Important
+      return result.data;
     } else {
       console.error("❌ Mauvais format de données :", result);
       return [];

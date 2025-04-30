@@ -74,7 +74,6 @@
       }
     </style>
 
-    <!-- ✅ Ton script client est chargé AVEC defer -->
     <script src="client.js" defer></script>
     <script defer>
       window.addEventListener("DOMContentLoaded", async () => {
@@ -85,6 +84,7 @@
 
         try {
           const pokemons = await window.api.getPokemons();
+          console.log("✅ Pokémons reçus :", pokemons);
           const pokemonList = document.getElementById("pokemonList");
           pokemonList.innerHTML = "";
 
