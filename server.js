@@ -73,13 +73,11 @@ app.use((err, req, res, next) => {
 
 // ✅ Connexion MongoDB et lancement serveur
 connectDB()
-
   .then(() => seedPokemons())
   .then(() => {
-
     app.listen(config.port, () => {
       console.log(
-        `✅ API Pokémon en ligne sur http://localhost:${config.port}`
+        `✅ API Pokémon en ligne – environnement Render, port ${config.port}`
       );
     });
   })

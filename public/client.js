@@ -35,11 +35,14 @@ async function getPokemons() {
   const token = localStorage.getItem("token");
 
   try {
-    const res = await fetch("http://localhost:3001/pokemons", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const res = await fetch(
+      "https://api-pokemon-render.onrender.com/pokemons",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
     const result = await res.json();
 
