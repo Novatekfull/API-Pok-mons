@@ -135,6 +135,21 @@
           margin: 0.75rem auto;
         }
       }
+      .recherche-tri {
+        margin: 2rem 0;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .recherche-tri input,
+      .recherche-tri select {
+        padding: 0.5rem;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+      }
 
       /* === ANIMATIONS === */
       @keyframes fadeIn {
@@ -153,6 +168,13 @@
       #resultat,
       #editResultat {
         animation: fadeIn 0.4s ease forwards;
+      }
+      img {
+        transition: transform 0.3s ease;
+      }
+
+      img:hover {
+        transform: rotate(5deg) scale(1.05);
       }
 
       /* === SPECIAL BUTTONS === */
@@ -190,13 +212,34 @@
           <option value="Acier">Acier</option>
           <option value="Fée">Fée</option>
         </select> </label
+      ><br /><br /><label
+        >Image (URL) :
+        <input type="text" id="image" placeholder="https://..." /> </label
       ><br /><br />
       <button type="submit">Ajouter</button>
     </form>
 
     <p id="resultat"></p>
+    <div class="recherche-tri">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Rechercher un Pokémon..."
+      />
+      <select id="sortSelect">
+        <option value="">-- Trier par --</option>
+        <option value="name">Nom</option>
+        <option value="type">Type</option>
+      </select>
+    </div>
     <h2>Liste des Pokémon ajoutés</h2>
     <ul id="liste"></ul>
+
+    <div id="paginationControls" style="margin-top: 2rem; text-align: center">
+      <button id="prevPage">⬅️ Précédent</button>
+      <span id="pageInfo"></span>
+      <button id="nextPage">Suivant ➡️</button>
+    </div>
     <h2>Modifier un Pokémon</h2>
     <form id="editForm" style="display: none">
       <input type="hidden" id="editId" />
@@ -224,11 +267,16 @@
           <option value="Acier">Acier</option>
           <option value="Fée">Fée</option>
         </select> </label
+      ><br /><br /><label
+        >Image (URL) :
+        <input type="text" id="editImage" placeholder="https://..." /> </label
       ><br /><br />
       <button type="submit">Mettre à jour</button>
     </form>
     <p id="editResultat"></p>
     <script>
+      let currentPage = 1;
+      const limitPerPage = 5;
       // Vérifie si l'utilisateur est connecté et est admin
       const token = localStorage.getItem("token");
       if (!token) {
@@ -295,6 +343,7 @@
           e.preventDefault();
           const nom = document.getElementById("nom").value;
           const type = document.getElementById("type").value;
+          const image = document.getElementById("image").value;
           if (!nom || !type)
             return showMessage(
               resEl,
@@ -309,15 +358,17 @@
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
-              body: JSON.stringify({ name: nom, type }),
+              body: JSON.stringify({ name: nom, type, image }),
             });
             if (gererExpirationSession(res)) return;
             const data = await res.json();
-            if (!res.ok)
-              throw new Error(
+            if (!res.ok) {
+              const errorMessage =
                 data.errors?.map((e) => `${e.path} : ${e.msg}`).join("\n") ||
-                  "Erreur inconnue"
-              );
+                data.error || // 👈 récupère directement data.error si disponible
+                "Erreur inconnue";
+              throw new Error(errorMessage);
+            }
 
             saveMessage(
               "success_message",
@@ -329,8 +380,40 @@
           }
         });
 
+      function updatePagination(page, totalPages) {
+        const pageInfo = document.getElementById("pageInfo");
+        const prevButton = document.getElementById("prevPage");
+        const nextButton = document.getElementById("nextPage");
+
+        pageInfo.textContent = `Page ${page} / ${totalPages}`;
+
+        prevButton.disabled = page <= 1;
+        nextButton.disabled = page >= totalPages;
+
+        prevButton.onclick = () => {
+          if (currentPage > 1) {
+            currentPage--;
+            chargerListePokemons();
+          }
+        };
+
+        nextButton.onclick = () => {
+          if (currentPage < totalPages) {
+            currentPage++;
+            chargerListePokemons();
+          }
+        };
+      }
+
       function chargerListePokemons() {
-        fetch("http://localhost:3001/pokemons", {
+        const search = document.getElementById("searchInput")?.value || "";
+        const sort = document.getElementById("sortSelect")?.value || "";
+
+        let url = `http://localhost:3001/pokemons?page=${currentPage}&limit=${limitPerPage}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (sort) url += `&sort=${sort}`;
+
+        fetch(url, {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -340,20 +423,70 @@
             if (gererExpirationSession(res)) return;
             return res.json();
           })
-          .then((pokemons) => {
+          .then((result) => {
+            const pokemons = result.data;
             const liste = document.getElementById("liste");
             liste.innerHTML = "";
-            pokemons.forEach(({ id, name, type }) => {
+
+            pokemons.forEach(({ id, name, type, image }) => {
               const li = document.createElement("li");
-              li.innerHTML = `${name} (${type})`;
+
+              const container = document.createElement("div");
+              container.style.display = "flex";
+              container.style.alignItems = "center";
+              container.style.gap = "1rem";
+
+              const img = document.createElement("img");
+
+              // 🛠️ Vérifie que image est une string correcte sinon utilise directement placeholder
+              const safeImage =
+                typeof image === "string" && image.trim() !== ""
+                  ? image
+                  : "https://placehold.co/50x50?text=?";
+
+              img.src = safeImage;
+              img.alt = name;
+              img.style.width = "50px";
+              img.style.height = "50px";
+              img.style.objectFit = "cover";
+              img.style.borderRadius = "50%";
+
+              // 👇 En cas d'erreur de chargement, remplace aussi
+              img.onerror = function () {
+                this.onerror = null;
+                this.src = "https://placehold.co/50x50?text=?";
+              };
+
+              const textDiv = document.createElement("div");
+              const nameEl = document.createElement("strong");
+              nameEl.textContent = name;
+              const typeEl = document.createElement("small");
+              typeEl.textContent = type;
+
+              textDiv.appendChild(nameEl);
+              textDiv.appendChild(document.createElement("br"));
+              textDiv.appendChild(typeEl);
+
+              container.appendChild(img);
+              container.appendChild(textDiv);
+
+              li.appendChild(container);
               li.appendChild(createButton("🗑️", () => supprimerPokemon(id)));
               li.appendChild(
                 createButton("✏️", () =>
-                  afficherFormulaireEdition(id, name, type)
+                  afficherFormulaireEdition(id, name, type, image)
                 )
               );
-              liste.appendChild(li);
+
+              document.getElementById("liste").appendChild(li);
             });
+
+            // MAINTIEN pagination bien recalée ici
+            updatePagination(result.page, result.totalPages);
+          })
+          .catch((err) => {
+            console.error("Erreur lors du chargement des pokémons :", err);
+            showMessage(resEl, "❌ Erreur de chargement de la liste", "error");
           });
       }
 
@@ -380,11 +513,14 @@
           .catch((err) => showMessage(resEl, "❌ " + err.message, "error"));
       }
 
-      function afficherFormulaireEdition(id, nom, type) {
+      function afficherFormulaireEdition(id, nom, type, image) {
         document.getElementById("editForm").style.display = "block";
         document.getElementById("editId").value = id;
         document.getElementById("editNom").value = decodeURIComponent(nom);
         document.getElementById("editType").value = decodeURIComponent(type);
+        document.getElementById("editImage").value = decodeURIComponent(
+          image || ""
+        );
       }
 
       document
@@ -394,6 +530,7 @@
           const id = document.getElementById("editId").value;
           const nom = document.getElementById("editNom").value;
           const type = document.getElementById("editType").value;
+          const image = document.getElementById("editImage").value;
 
           fetch(`http://localhost:3001/pokemons/${id}`, {
             method: "PUT",
@@ -401,7 +538,7 @@
               "Content-Type": "application/json",
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-            body: JSON.stringify({ name: nom, type }),
+            body: JSON.stringify({ name: nom, type, image }),
           })
             .then((res) => {
               if (!res.ok) throw new Error("Erreur lors de la modification");
@@ -410,7 +547,6 @@
             })
             .catch((err) => showMessage(editEl, "❌ " + err.message, "error"));
         });
-
       function logout() {
         localStorage.removeItem("token");
         window.location.href = "login.html";
@@ -419,6 +555,14 @@
       // Init
       chargerListePokemons();
       showSavedMessages();
+      // Gérer recherche et tri en temps réel
+      document.getElementById("searchInput").addEventListener("input", () => {
+        chargerListePokemons();
+      });
+
+      document.getElementById("sortSelect").addEventListener("change", () => {
+        chargerListePokemons();
+      });
     </script>
   </body>
 </html>

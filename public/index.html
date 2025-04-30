@@ -73,46 +73,63 @@
         min-height: 1.5rem;
       }
     </style>
-  </head>
-  <body>
-    <div class="container">
-      <h1>Bienvenue dans l'espace Pokémon</h1>
-      <button onclick="logout()">Se déconnecter</button>
-      <div id="message"></div>
-      <div id="pokemonList"></div>
-    </div>
 
-    <script src="client.js"></script>
-    <script>
-      // Vérifie si l'utilisateur est connecté
-      if (!api.isAuthenticated()) {
-        window.location.href = "login.html";
-      }
+    <!-- ✅ Ton script client est chargé AVEC defer -->
+    <script src="client.js" defer></script>
+    <script defer>
+      window.addEventListener("DOMContentLoaded", async () => {
+        if (!window.api?.isAuthenticated()) {
+          window.location.href = "login.html";
+          return;
+        }
 
-      // Charge les Pokémon
-      async function loadPokemons() {
         try {
-          const pokemons = await api.getPokemons();
+          const pokemons = await window.api.getPokemons();
           const pokemonList = document.getElementById("pokemonList");
           pokemonList.innerHTML = "";
 
           pokemons.forEach((pokemon) => {
             const card = document.createElement("div");
             card.className = "pokemon-card";
-            card.innerHTML = `
-            <h3>${pokemon.name}</h3>
-            <p>Type: ${pokemon.type}</p>
-          `;
+
+            const img = document.createElement("img");
+            img.src =
+              pokemon.image && pokemon.image.trim() !== ""
+                ? pokemon.image
+                : "https://via.placeholder.com/100?text=❓";
+            img.alt = pokemon.name;
+            img.style.width = "100px";
+            img.style.height = "100px";
+            img.style.objectFit = "cover";
+            img.onerror = () => {
+              img.src = "https://via.placeholder.com/100?text=❓";
+            };
+
+            const title = document.createElement("h3");
+            title.textContent = pokemon.name;
+
+            const type = document.createElement("p");
+            type.textContent = `Type : ${pokemon.type}`;
+
+            card.appendChild(img);
+            card.appendChild(title);
+            card.appendChild(type);
             pokemonList.appendChild(card);
           });
-        } catch (error) {
+        } catch (err) {
           document.getElementById("message").textContent =
-            "❌ " + error.message;
+            "❌ Erreur lors du chargement : " + err.message;
         }
-      }
-
-      // Initialisation
-      loadPokemons();
+      });
     </script>
+  </head>
+
+  <body>
+    <div class="container">
+      <h1>Bienvenue dans l'espace Pokémon</h1>
+      <button onclick="window.api.logout()">Se déconnecter</button>
+      <div id="message"></div>
+      <div id="pokemonList"></div>
+    </div>
   </body>
 </html>

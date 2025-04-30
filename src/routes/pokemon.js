@@ -1,22 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { validationResult } = require("express-validator");
 const { authenticateToken, authorizeRole } = require("../middleware/auth");
 const pokemonController = require("../controllers/pokemon");
 const { pokemonValidationRules } = require("../validators/pokemon");
 
-// Routes protégées avec authentification
+// ✅ Toutes les routes nécessitent une connexion (admin ou user)
 router.get("/", authenticateToken, pokemonController.getAllPokemons);
 router.get("/:id", authenticateToken, pokemonController.getPokemonById);
 
-// Routes protégées avec authentification et validation
+// ✅ Ajouter et Modifier accessible aux user ET admin
 router.post(
   "/",
   authenticateToken,
   pokemonValidationRules.create,
   pokemonController.createPokemon
 );
-
 router.put(
   "/:id",
   authenticateToken,
@@ -24,7 +22,7 @@ router.put(
   pokemonController.updatePokemon
 );
 
-// Route protégée avec authentification et autorisation admin
+// ✅ Supprimer uniquement réservé aux ADMIN
 router.delete(
   "/:id",
   authenticateToken,

@@ -1,34 +1,31 @@
 require("dotenv").config();
+const mongoose = require("mongoose");
+
+const config = {
+  port: process.env.PORT || 3001,
+  jwtSecret: process.env.JWT_SECRET || "supersecret",
+  mongodbUri:
+    process.env.MONGODB_URI || "mongodb://localhost:27017/mon-api-pokemon",
+  rateLimit: {
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+  },
+};
+
+async function connectDB() {
+  try {
+    await mongoose.connect(config.mongodbUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("✅ Connecté à MongoDB");
+  } catch (error) {
+    console.error("❌ Erreur de connexion à MongoDB:", error.message);
+    process.exit(1);
+  }
+}
 
 module.exports = {
-  server: {
-    port: process.env.PORT || 3001,
-    env: process.env.NODE_ENV || "development",
-  },
-  security: {
-    jwtSecret: process.env.JWT_SECRET,
-    jwtExpiresIn: process.env.JWT_EXPIRES_IN,
-    corsOrigin: process.env.CORS_ORIGIN,
-  },
-  database: {
-    path: process.env.DB_PATH || "./data/pokemons.json",
-  },
-  rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000,
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS),
-  },
-  logging: {
-    level: process.env.LOG_LEVEL || "info",
-    file: process.env.LOG_FILE || "./logs/app.log",
-  },
-  defaultAccounts: {
-    admin: {
-      username: process.env.DEFAULT_ADMIN_USERNAME,
-      password: process.env.DEFAULT_ADMIN_PASSWORD,
-    },
-    user: {
-      username: process.env.DEFAULT_USER_USERNAME,
-      password: process.env.DEFAULT_USER_PASSWORD,
-    },
-  },
+  config,
+  connectDB,
 };

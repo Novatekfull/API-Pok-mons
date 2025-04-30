@@ -32,45 +32,26 @@ function logout() {
 
 // Fonctions CRUD pour les Pokémon
 async function getPokemons() {
+  const token = localStorage.getItem("token");
+
   try {
-    const response = await fetch("http://localhost:3001/pokemons", {
+    const res = await fetch("http://localhost:3001/pokemons", {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    if (response.status === 401 || response.status === 403) {
-      logout();
-      return;
+    const result = await res.json();
+
+    if (Array.isArray(result.data)) {
+      return result.data; // ✅ Important
+    } else {
+      console.error("❌ Mauvais format de données :", result);
+      return [];
     }
-
-    if (!response.ok) {
-      throw new Error("Erreur lors de la récupération des Pokémon");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Erreur:", error);
-    throw error;
-  }
-}
-
-async function getPokemon(id) {
-  try {
-    const response = await fetch(`${API_URL}/pokemons/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Pokémon non trouvé");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Erreur:", error);
-    throw error;
+  } catch (err) {
+    console.error("❌ Erreur dans getPokemons :", err.message);
+    return [];
   }
 }
 
@@ -158,7 +139,6 @@ window.api = {
   login,
   logout,
   getPokemons,
-  getPokemon,
   createPokemon,
   updatePokemon,
   deletePokemon,
